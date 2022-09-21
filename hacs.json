@@ -1,10 +1,6 @@
 {
-    "name": "Integration blueprint",
-    "hacs": "1.6.0",
-    "domains": [
-        "binary_sensor",
-        "sensor",
-        "switch"
-    ],
-    "homeassistant": "0.118.0"
+    "name": "LINZ NETZ",
+    "render_readme": true,
+    "hacs": "1.27.0",
+    "homeassistant": "2022.8.0"
 }

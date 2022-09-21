@@ -1,0 +1,17 @@
+import_report:
+  name: Import Report
+  description: Import daily QH CSV reports from LINZ NETZ.
+  fields:
+    entity_id:
+      description: The LINZ NETZ entity.
+      required: true
+      selector:
+        entity:
+          integration: linznetz
+          domain: sensor
+          device_class: energy
+    path:
+      description: The path of the CSV file.
+      required: true
+      selector:
+        text:

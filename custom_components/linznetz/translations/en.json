@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "LINZ NETZ",
+                "description": "Create a new entity to store imported QH reports from LINZ NETZ.",
+                "data": {
+                    "meter_point_number": "Meter Point Number",
+                    "name": "Name"
+                }
+            }
+        },
+        "error": {
+            "invalid_length": "Meter Point Number has invalid length, must be 33 characters long."
+        }
+    }
+}

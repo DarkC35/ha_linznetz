@@ -1,0 +1,12 @@
+{
+  "domain": "linznetz",
+  "name": "LINZ NETZ",
+  "documentation": "https://github.com/DarkC35/ha_linznetz",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/DarkC35/ha_linznetz/issues",
+  "version": "0.0.0",
+  "config_flow": true,
+  "codeowners": [
+    "@DarkC35"
+  ]
+}
