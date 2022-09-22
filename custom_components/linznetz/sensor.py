@@ -152,9 +152,11 @@ class LinzNetzSensor(SensorEntity):
                 inserted_stats = await get_instance(self.hass).async_add_executor_job(
                     statistics_during_period,
                     self.hass,
-                    datetime.strptime(
-                        csv_data[0]["Datum von"], "%d.%m.%Y %H:%M"
-                    ).replace(tzinfo=dt_util.get_time_zone("Europe/Vienna"))
+                    dt_util.as_utc(
+                        datetime.strptime(
+                            csv_data[0]["Datum von"], "%d.%m.%Y %H:%M"
+                        ).replace(tzinfo=dt_util.get_time_zone("Europe/Vienna"))
+                    )
                     - timedelta(hours=1),
                     None,
                     [self.entity_id],
