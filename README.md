@@ -76,7 +76,7 @@ This example uses [emcniece/ha_imap_attachment](https://github.com/emcniece/ha_i
 3. Optional: Login to your mail provider and create a new folder for the LINZ NETZ reports, e.g. `VDI`. If you don't want to use a new folder you have to use the folder `INBOX` in your configuration but it will be difficult to filter this way.
 4. **IMPORTANT**: Since the reports are sent with SMIME encryption `ha_imap_attachment` downloads the encrypted mail instead of the attachments. To solve this problem you have to configure some rules for your inbox as a workaround: The easiest way is to forward the daily reports to yourself (or another mail address), this will remove the encryption (tested with Outlook.com). Example rules:
 ```
-1. Mails with tiles containing "Tagesbericht Viertelstundenverbrauch" from "vdi@linznetz.at" forward to <my mail address> and delete original mail.
+1. Mails with titles containing "Tagesbericht Viertelstundenverbrauch" from "vdi@linznetz.at" forward to <my mail address> and delete original mail.
 2. Mails with titles containing "Tagesbericht Viertelstundenverbrauch" from <my mail address> move to folder "VDI".
 ```
 5. Add the configs from the `configuration.yaml` example below to your configurations.
