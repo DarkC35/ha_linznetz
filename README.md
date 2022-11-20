@@ -51,7 +51,7 @@ custom_components/linznetz/sensor.py
 custom_components/linznetz/services.yaml
 ```
 
-## Configuration is done in the UI
+## Configurations with the UI
 
 **To use this integration you need a free account at https://www.linznetz.at and enable the quater-hour(QH) analysis ("Viertelstundenauswertung"). Then it will take 1-2 days until your SmartMeter transfers the QH data to LINZ NETZ.** Please make sure you have a LINZ NETZ account since *LINZ AG Plus24* does not support QH E-Mail reports! (You can have both accounts if you want to.) You can check on the LINZ NETZ services page > "Verbrauchsdateninformation"/"Verbräuche anzeigen" if your SmartMeter supports QH analysis and if your data is already transmitted to LINZ NETZ.
 
@@ -64,8 +64,70 @@ After the import you can use the `sensor.smartmeter_energy` entity on the energy
 ### TODOs
 * Describe `linznetz.import_report` service.
 * Add tests.
-* Add example automation to import reports.
 * Add screenshots.
+
+## Example automation for daily inserts
+
+This example uses [emcniece/ha_imap_attachment](https://github.com/emcniece/ha_imap_attachment/) to download the attachments. You can install this component manually or as an HACS custom repository.
+
+0. Optional: Before setting up the daily automation you can bulk import all your available previous QH values. Download them from linznetz.at as a csv file, copy this file to your HA installation and all the `linznetz.import_report` service from the HA developer tools page. This integrations tries to re-calculate and update the statistics when missing values are inserted afterwards but it's safer to insert them chronologically.
+1. Install `ha_imap_attachment` and follow the steps to create a new folder for the attachments on your HA installation (we use `/config/attachments` here).
+2. Lookup the IMAP configurations for your mail provider (example below uses Outlook). For Gmail you will have to set an App Password on your Google account and enable Multi-Factor Authentication (see [core IMAP docs](https://www.home-assistant.io/integrations/imap/#gmail-with-app-password)).
+3. Optional: Login to your mail provider and create a new folder for the LINZ NETZ reports, e.g. `VDI`. If you don't want to use a new folder you have to use the folder `INBOX` in your configuration but it will be difficult to filter this way.
+4. **IMPORTANT**: Since the reports are sent with SMIME encryption `ha_imap_attachment` downloads the encrypted mail instead of the attachments. To solve this problem you have to configure some rules for your inbox as a workaround: The easiest way is to forward the daily reports to yourself (or another mail address), this will remove the encryption (tested with Outlook.com). Example rules:
+```
+1. Mails with tiles containing "Tagesbericht Viertelstundenverbrauch" from "vdi@linznetz.at" forward to <my mail address> and delete original mail.
+2. Mails with titles containing "Tagesbericht Viertelstundenverbrauch" from <my mail address> move to folder "VDI".
+```
+5. Add the configs from the `configuration.yaml` example below to your configurations.
+6. Restart Home-Assistant. You can test the configuration with forwarding a daily report to yourself. You should see a `sensor.linz_netz_attachments` (based on the sensor name in the configuration) entity with the path to a csv file now (this can take some minutes).
+7. Create an automation like the `automation-example.yaml` below (as a file or with the UI; you can copy-paste this as-is).
+
+### configuration.yaml
+
+```yaml
+homeassistant:
+  allowlist_external_dirs:
+    - "/config/attachments"
+
+sensor:
+  - platform: imap_attachment
+    name: LINZ NETZ Attachments
+    server: outlook.office365.com
+    port: 993
+    folder: VDI
+    senders:
+        - !secret outlook_mail
+    username: !secret outlook_mail
+    password: !secret outlook_password
+    storage_path: /config/attachments
+    value_template: "{{ ( attachment_paths | select('search', '.csv')) | first | default('unavailable') }}"
+```
+
+### automation-example.yaml
+```yaml
+alias: Import Linz Netz Email Reports
+description: ""
+trigger:
+  - platform: state
+    entity_id:
+      - sensor.linz_netz_attachments
+condition:
+  - condition: not
+    conditions:
+      - condition: state
+        entity_id: sensor.linz_netz_attachments
+        state: unknown
+      - condition: state
+        entity_id: sensor.linz_netz_attachments
+        state: unavailable
+action:
+  - service: linznetz.import_report
+    data:
+      entity_id: sensor.smartmeter_energy
+      path: "{{ states('sensor.linz_netz_attachments') }}"
+mode: single
+```
 
 ## Contributions are welcome!
 
