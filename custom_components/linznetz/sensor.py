@@ -106,7 +106,7 @@ class LinzNetzSensor(SensorEntity):
             # metadata for internal stats
             metadata = StatisticMetaData(
                 unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-                state_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+                # state_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
                 source="recorder",
                 name=self.name,
                 statistic_id=self.entity_id,
