@@ -209,24 +209,3 @@ class LinzNetzSensor(SensorEntity):
         _LOGGER.debug(statistics)
         _LOGGER.debug(metadata)
         async_import_statistics(self.hass, metadata, statistics)
-
-        # newest_value = None
-        # if (
-        #     len(last_inserted_stat) == 0
-        #     or len(last_inserted_stat[self.entity_id]) == 0
-        #     or dt_util.parse_datetime(last_inserted_stat[self.entity_id][0]["start"])
-        #     <= statistics[-1]["start"]
-        # ):
-        #     # do not use sum here since it messes with the last_inserted_stat
-        #     # newest_value = statistics[-1]["sum"]
-        #     newest_value = statistics[-1]["state"]
-        # elif (
-        #     len(last_inserted_stat[self.entity_id]) == 1
-        #     and dt_util.parse_datetime(last_inserted_stat[self.entity_id][0]["start"])
-        #     > statistics[-1]["start"]
-        # ):
-        #     # do not use sum here since it messes with the last_inserted_stat
-        #     # newest_value = Decimal(last_inserted_stat[self.entity_id][0]["sum"])
-        #     newest_value = Decimal(last_inserted_stat[self.entity_id][0]["state"])
-        # self._attr_native_value = newest_value
-        # self.async_write_ha_state()
