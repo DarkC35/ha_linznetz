@@ -1,6 +1,6 @@
 {
     "name": "LINZ NETZ",
     "render_readme": true,
-    "hacs": "1.28.0",
-    "homeassistant": "2022.10.0"
+    "hacs": "1.28.4",
+    "homeassistant": "2022.12.0"
 }

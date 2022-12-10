@@ -17,6 +17,15 @@ Platform | Description
 
 ## Installation
 
+### Supported Versions
+
+The current code was adapted and tested with the following required versions. The integration might work on newer vesions, however internal breaking changes introduced by Home-Assistant could break the integration. Please update with caution and open an issue if anything breaks. As a workaround, you can bulk import all your missing reports manually as soon as a fix for this integration is available.
+
+Component | Min. Required Version
+-|-
+Home-Assistant | 2022.12.0
+HACS | 1.28.4
+
 ### HACS (Custom Repository)
 
 1. Navigate to `HACS` on your Home-Assistant dashboard.
@@ -55,7 +64,7 @@ custom_components/linznetz/services.yaml
 
 **To use this integration you need a free account at https://www.linznetz.at and enable the quater-hour(QH) analysis ("Viertelstundenauswertung"). Then it will take 1-2 days until your SmartMeter transfers the QH data to LINZ NETZ.** Please make sure you have a LINZ NETZ account since *LINZ AG Plus24* does not support QH E-Mail reports! (You can have both accounts if you want to.) You can check on the LINZ NETZ services page > "Verbrauchsdateninformation"/"Verbräuche anzeigen" if your SmartMeter supports QH analysis and if your data is already transmitted to LINZ NETZ.
 
-During the configuration insert the 33 characters long "meter point number" ("Zählerpunktnummer") you can find on https://www.linznetz.at > "Meine Verbräuche" > "Verbräuche anzeigen". This number is used as the unique ID. If you don't want to use your real number just use `AT0000000000000000000000000000000` but please make sure you need another number if you need a second instance of this integration! The second configuration value `name` is optinal, you can use it to identify different SmartMeters, the default name is "SmartMeter".
+During the configuration insert the 33 characters long "meter point number" ("Zählerpunktnummer") you can find on https://www.linznetz.at > "Meine Verbräuche" > "Verbräuche anzeigen". This number is used as the unique ID. If you don't want to use your real number (e.g. for testing) just use `AT0000000000000000000000000000000` but please make sure you need another number if you need a second instance of this integration! The second configuration value `name` is optinal, you can use it to identify different SmartMeters, the default name is "SmartMeter".
 
 This will create a `sensor.smartmeter_energy` entity which you can use to import the QH reports to. To import your QH reports use the `linznetz.import_report` service.
 
