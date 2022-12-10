@@ -56,6 +56,16 @@ async def async_setup_entry(
     async_add_devices([LinzNetzSensor(config_entry)])
 
 
+def parse_csv_date_str(csv_date_str: str) -> datetime:
+    """Parses the Austrian time string to an UTC datetime."""
+    parsed_str = dt_util.as_utc(
+        datetime.strptime(csv_date_str, "%d.%m.%Y %H:%M").replace(
+            tzinfo=dt_util.get_time_zone("Europe/Vienna")
+        )
+    )
+    return parsed_str
+
+
 class LinzNetzSensor(SensorEntity):
     """linznetz Sensor class."""
 
@@ -124,7 +134,7 @@ class LinzNetzSensor(SensorEntity):
                 )
 
             last_inserted_stat = await get_instance(self.hass).async_add_executor_job(
-                get_last_statistics, self.hass, 1, self.entity_id, True
+                get_last_statistics, self.hass, 1, self.entity_id, True, {"sum"}
             )
             inserted_stats = {self.entity_id: []}
             _LOGGER.debug("Last inserted stat:")
@@ -139,27 +149,21 @@ class LinzNetzSensor(SensorEntity):
             elif (
                 len(last_inserted_stat) == 1
                 and len(last_inserted_stat[self.entity_id]) == 1
-                and dt_util.parse_datetime(
-                    last_inserted_stat[self.entity_id][0]["start"]
-                )
-                < datetime.strptime(csv_data[0]["Datum von"], "%d.%m.%Y %H:%M").replace(
-                    tzinfo=dt_util.get_time_zone("Europe/Vienna")
-                )
+                and last_inserted_stat[self.entity_id][0]["start"]
+                < parse_csv_date_str(csv_data[0]["Datum von"])
             ):
                 _sum = Decimal(last_inserted_stat[self.entity_id][0]["sum"])
-                _LOGGER.debug("Previous inserted stats found, start sum with %d.", _sum)
+                _LOGGER.debug("Previous inserted stats found, start sum with %f.", _sum)
             else:
                 inserted_stats = await get_instance(self.hass).async_add_executor_job(
                     statistics_during_period,
                     self.hass,
-                    dt_util.as_utc(
-                        datetime.strptime(
-                            csv_data[0]["Datum von"], "%d.%m.%Y %H:%M"
-                        ).replace(tzinfo=dt_util.get_time_zone("Europe/Vienna"))
-                    )
-                    - timedelta(hours=1),
+                    parse_csv_date_str(csv_data[0]["Datum von"]) - timedelta(hours=1),
                     None,
                     [self.entity_id],
+                    "hour",
+                    None,
+                    {"sum", "state"},
                 )
                 _LOGGER.debug("Inserted stats:")
                 _LOGGER.debug(inserted_stats)
@@ -167,24 +171,18 @@ class LinzNetzSensor(SensorEntity):
                     Decimal(inserted_stats[self.entity_id][0]["sum"])
                     if len(inserted_stats) > 0
                     and len(inserted_stats[self.entity_id]) > 0
-                    and dt_util.parse_datetime(
-                        inserted_stats[self.entity_id][0]["start"]
-                    )
-                    < datetime.strptime(
-                        csv_data[0]["Datum von"], "%d.%m.%Y %H:%M"
-                    ).replace(tzinfo=dt_util.get_time_zone("Europe/Vienna"))
+                    and inserted_stats[self.entity_id][0]["start"]
+                    < parse_csv_date_str(csv_data[0]["Datum von"])
                     else Decimal(0)
                 )
-                _LOGGER.debug("Overlap detected, start sum with %d.", _sum)
+                _LOGGER.debug("Overlap detected, start sum with %f.", _sum)
 
             hourly_sum = Decimal(0)
             start = None
             for index, record in enumerate(csv_data, start=1):
                 hourly_sum += Decimal(record[list(record.keys())[2]].replace(",", "."))
                 if index % 4 == 1:
-                    start = datetime.strptime(
-                        record["Datum von"], "%d.%m.%Y %H:%M"
-                    ).replace(tzinfo=dt_util.get_time_zone("Europe/Vienna"))
+                    start = parse_csv_date_str(record["Datum von"])
                 if index % 4 == 0:
                     _sum += hourly_sum
                     statistics.append(
@@ -196,12 +194,12 @@ class LinzNetzSensor(SensorEntity):
                     )
                     hourly_sum = Decimal(0)
         for stat in inserted_stats[self.entity_id]:
-            if dt_util.parse_datetime(stat["start"]) <= statistics[-1]["start"]:
+            if stat["start"] <= statistics[-1]["start"]:
                 continue
             _sum += Decimal(stat["state"])
             statistics.append(
                 StatisticData(
-                    start=dt_util.parse_datetime(stat["start"]),
+                    start=stat["start"],
                     state=stat["state"],
                     sum=_sum,
                 )
