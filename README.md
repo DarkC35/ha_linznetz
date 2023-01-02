@@ -19,7 +19,7 @@ Platform | Description
 
 ### Supported Versions
 
-The current code was adapted and tested with the following required versions. The integration might work on newer vesions, however internal breaking changes introduced by Home-Assistant could break the integration. Please update with caution and open an issue if anything breaks. As a workaround, you can bulk import all your missing reports manually as soon as a fix for this integration is available.
+The current code was adapted and tested with the following required versions. The integration might work on newer versions, however internal breaking changes introduced by Home-Assistant could break the integration. Please update with caution and open an issue if anything breaks. As a workaround, you can bulk import all your missing reports manually as soon as a fix for this integration is available.
 
 Component | Min. Required Version
 -|-
@@ -62,9 +62,9 @@ custom_components/linznetz/services.yaml
 
 ## Configurations with the UI
 
-**To use this integration you need a free account at https://www.linznetz.at and enable the quater-hour(QH) analysis ("Viertelstundenauswertung"). Then it will take 1-2 days until your SmartMeter transfers the QH data to LINZ NETZ.** Please make sure you have a LINZ NETZ account since *LINZ AG Plus24* does not support QH E-Mail reports! (You can have both accounts if you want to.) You can check on the LINZ NETZ services page > "Verbrauchsdateninformation"/"Verbräuche anzeigen" if your SmartMeter supports QH analysis and if your data is already transmitted to LINZ NETZ.
+**To use this integration you need a free account at https://www.linznetz.at and enable the quarter-hour(QH) analysis ("Viertelstundenauswertung"). Then it will take 1-2 days until your SmartMeter transfers the QH data to LINZ NETZ.** Please make sure you have a LINZ NETZ account since *LINZ AG Plus24* does not support QH E-Mail reports! (You can have both accounts if you want to.) You can check on the LINZ NETZ services page > "Verbrauchsdateninformation"/"Verbräuche anzeigen" if your SmartMeter supports QH analysis and if your data is already transmitted to LINZ NETZ.
 
-During the configuration insert the 33 characters long "meter point number" ("Zählerpunktnummer") you can find on https://www.linznetz.at > "Meine Verbräuche" > "Verbräuche anzeigen". This number is used as the unique ID. If you don't want to use your real number (e.g. for testing) just use `AT0000000000000000000000000000000` but please make sure you need another number if you need a second instance of this integration! The second configuration value `name` is optinal, you can use it to identify different SmartMeters, the default name is "SmartMeter".
+During the configuration insert the 33 characters long "meter point number" ("Zählerpunktnummer") you can find on https://www.linznetz.at > "Meine Verbräuche" > "Verbräuche anzeigen". This number is used as the unique ID. If you don't want to use your real number (e.g. for testing) just use `AT0000000000000000000000000000000` but please make sure you need another number if you need a second instance of this integration! The second configuration value `name` is optional, you can use it to identify different SmartMeters, the default name is "SmartMeter".
 
 This will create a `sensor.smartmeter_energy` entity which you can use to import the QH reports to. To import your QH reports use the `linznetz.import_report` service.
 
@@ -74,12 +74,13 @@ After the import you can use the `sensor.smartmeter_energy` entity on the energy
 * Describe `linznetz.import_report` service.
 * Add tests.
 * Add screenshots.
+* Fix import with daylight saving changes (see [#4](https://github.com/DarkC35/ha_linznetz/issues/4)).
 
 ## Example automation for daily inserts
 
 This example uses [emcniece/ha_imap_attachment](https://github.com/emcniece/ha_imap_attachment/) to download the attachments. You can install this component manually or as an HACS custom repository.
 
-0. Optional: Before setting up the daily automation you can bulk import all your available previous QH values. Download them from linznetz.at as a csv file, copy this file to your HA installation and all the `linznetz.import_report` service from the HA developer tools page. This integrations tries to re-calculate and update the statistics when missing values are inserted afterwards but it's safer to insert them chronologically.
+0. Optional: Before setting up the daily automation you can bulk import all your available previous QH values. Download them from linznetz.at as a csv file, copy this file to your HA installation and call the `linznetz.import_report` service from the HA developer tools page. This integrations tries to re-calculate and update the statistics when missing values are inserted afterwards but it's safer to insert them chronologically. Beware that there is an [open issue](https://github.com/DarkC35/ha_linznetz/issues/4) for handling imports that contain daylight saving changes therefore if your report contains such days (e.g. 30. October 2022) the import will fail. You can either use the described workaround or skip these specific days and wait until the issue is resolved.
 1. Install `ha_imap_attachment` and follow the steps to create a new folder for the attachments on your HA installation (we use `/config/attachments` here).
 2. Lookup the IMAP configurations for your mail provider (example below uses Outlook). For Gmail you will have to set an App Password on your Google account and enable Multi-Factor Authentication (see [core IMAP docs](https://www.home-assistant.io/integrations/imap/#gmail-with-app-password)).
 3. Optional: Login to your mail provider and create a new folder for the LINZ NETZ reports, e.g. `VDI`. If you don't want to use a new folder you have to use the folder `INBOX` in your configuration but it will be difficult to filter this way.
