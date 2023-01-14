@@ -17,6 +17,7 @@ from custom_components.linznetz.const import (
     DOMAIN,
     SENSOR,
     SERVICE_IMPORT_REPORT,
+    END_TIME_KEY,
     START_TIME_KEY,
 )
 from custom_components.linznetz.sensor import (
@@ -25,12 +26,75 @@ from custom_components.linznetz.sensor import (
     parse_csv_date_str,
     parse_german_number_str_to_decimal,
     parse_value_to_decimal,
+    validate_hour_block,
 )
 
 from .const import MOCK_CONFIG
 
 
 STATISTIC_ID = f"{SENSOR}.{DEFAULT_NAME.lower()}_energy"
+
+
+DATA_WITH_INVALID_LENGTH = [
+    {
+        START_TIME_KEY: "17.09.2022 00:00",
+        END_TIME_KEY: "17.09.2022 00:15",
+        "Energiemenge in kWh": "1",
+        "Ersatzwert": "",
+    }
+]
+DATA_WITH_INVALID_ORDER = [
+    {
+        START_TIME_KEY: "17.09.2022 00:00",
+        END_TIME_KEY: "17.09.2022 00:15",
+        "Energiemenge in kWh": "1",
+        "Ersatzwert": "",
+    },
+    {
+        START_TIME_KEY: "17.09.2022 00:15",
+        END_TIME_KEY: "17.09.2022 00:30",
+        "Energiemenge in kWh": "1",
+        "Ersatzwert": "",
+    },
+    {
+        START_TIME_KEY: "17.09.2022 00:45",
+        END_TIME_KEY: "17.09.2022 01:00",
+        "Energiemenge in kWh": "1",
+        "Ersatzwert": "",
+    },
+    {
+        START_TIME_KEY: "17.09.2022 00:30",
+        END_TIME_KEY: "17.09.2022 00:45",
+        "Energiemenge in kWh": "1",
+        "Ersatzwert": "",
+    },
+]
+DATA_WITH_INVALID_PREFIX = [
+    {
+        START_TIME_KEY: "17.09.2022 00:00",
+        END_TIME_KEY: "17.09.2022 00:15",
+        "Energiemenge in kWh": "1",
+        "Ersatzwert": "",
+    },
+    {
+        START_TIME_KEY: "17.09.2022 01:15",
+        END_TIME_KEY: "17.09.2022 00:30",
+        "Energiemenge in kWh": "1",
+        "Ersatzwert": "",
+    },
+    {
+        START_TIME_KEY: "17.09.2022 00:30",
+        END_TIME_KEY: "17.09.2022 00:45",
+        "Energiemenge in kWh": "1",
+        "Ersatzwert": "",
+    },
+    {
+        START_TIME_KEY: "17.09.2022 00:45",
+        END_TIME_KEY: "17.09.2022 01:00",
+        "Energiemenge in kWh": "1",
+        "Ersatzwert": "",
+    },
+]
 
 
 async def prepare_and_call_import_service_mocked(hass, csv_data):
@@ -260,3 +324,69 @@ async def test_import_service_update_with_modified_data(hass):
     assert parse_value_to_decimal(stats[STATISTIC_ID][-1]["sum"]) == get_csv_data_sum(
         modified_csv_data
     )
+
+
+async def test_import_service_with_daylight_saving_change_winter(hass):
+    """Test import service with daylight saving change in winter."""
+
+    csv_data = get_csv_data_list_from_file("tests/data/2022-10-30.csv")
+    stats = await get_statistics(hass, parse_csv_date_str(csv_data[0][START_TIME_KEY]))
+    assert len(stats) == 0
+
+    await prepare_and_call_import_service_mocked(hass, csv_data)
+
+    stats = await get_statistics(hass, parse_csv_date_str(csv_data[0][START_TIME_KEY]))
+    assert len(stats) == 1
+    assert len(stats[STATISTIC_ID]) == 25
+
+    assert parse_value_to_decimal(stats[STATISTIC_ID][-1]["sum"]) == get_csv_data_sum(
+        csv_data
+    )
+
+
+async def test_import_service_with_daylight_saving_change_summer(hass):
+    """Test import service with daylight saving change in summer."""
+
+    csv_data = get_csv_data_list_from_file("tests/data/2022-03-27.csv")
+    stats = await get_statistics(hass, parse_csv_date_str(csv_data[0][START_TIME_KEY]))
+    assert len(stats) == 0
+
+    await prepare_and_call_import_service_mocked(hass, csv_data)
+
+    stats = await get_statistics(hass, parse_csv_date_str(csv_data[0][START_TIME_KEY]))
+    assert len(stats) == 1
+    assert len(stats[STATISTIC_ID]) == 23
+
+    assert parse_value_to_decimal(stats[STATISTIC_ID][-1]["sum"]) == get_csv_data_sum(
+        csv_data
+    )
+
+
+async def test_import_service_with_invalid_lenght_data(hass):
+    """Test import service with invalid lenght data."""
+
+    with pytest.raises(HomeAssistantError) as err:
+        await prepare_and_call_import_service_mocked(hass, DATA_WITH_INVALID_LENGTH)
+    assert err
+
+
+async def test_import_service_with_invalid_order_data(hass):
+    """Test import service with invalid order data."""
+
+    with pytest.raises(HomeAssistantError) as err:
+        await prepare_and_call_import_service_mocked(hass, DATA_WITH_INVALID_ORDER)
+    assert err
+
+
+async def test_import_service_with_invalid_hour_block_prefix(hass):
+    """Test import service with invalid hour block prefix."""
+
+    with pytest.raises(HomeAssistantError) as err:
+        await prepare_and_call_import_service_mocked(hass, DATA_WITH_INVALID_PREFIX)
+    assert err
+
+
+def test_invalid_hour_block_length():
+    """Test hour block validation with invalid length."""
+
+    assert not validate_hour_block(DATA_WITH_INVALID_LENGTH)
