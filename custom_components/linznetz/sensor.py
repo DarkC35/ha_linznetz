@@ -34,6 +34,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     SERVICE_IMPORT_REPORT,
+    END_TIME_KEY,
     START_TIME_KEY,
 )
 
@@ -93,6 +94,22 @@ def get_csv_data_list_from_file(file_path: str):
     return csv_data
 
 
+def validate_hour_block(hour_block: list) -> bool:
+    """Validates the QH values in an hour block to be in the right order."""
+    if len(hour_block) != 4:
+        return False
+    first_prefix = None
+    for index, record in enumerate(hour_block, start=0):
+        prefix, suffix = record[START_TIME_KEY].split(":")
+        if index == 0:
+            first_prefix = prefix
+        if prefix != first_prefix:
+            return False
+        if int(suffix) != (index * 15):
+            return False
+    return True
+
+
 class LinzNetzSensor(SensorEntity):
     """linznetz Sensor class."""
 
@@ -149,9 +166,9 @@ class LinzNetzSensor(SensorEntity):
 
         csv_data = get_csv_data_list_from_file(path)
 
-        if len(csv_data) % 96 != 0:
+        if len(csv_data) % 4 != 0:
             raise HomeAssistantError(
-                "Report to import should have exactly 96 quarter-hour entries per day."
+                "Report to import seems to be corrupted. Please ensure that there are at least 4 QH values per hour."
             )
 
         last_inserted_stat = await get_instance(self.hass).async_add_executor_job(
@@ -198,11 +215,25 @@ class LinzNetzSensor(SensorEntity):
         hourly_sum = Decimal(0)
         start = None
         csv_data_value_key = get_csv_data_value_key(csv_data)
+        daylight_saving_change_needs_additional_hour = False
         for index, record in enumerate(csv_data, start=1):
             hourly_sum += parse_german_number_str_to_decimal(record[csv_data_value_key])
             if index % 4 == 1:
+                if not validate_hour_block(csv_data[(index - 1) : (index - 1) + 4]):
+                    raise HomeAssistantError(
+                        "Invalid hour block detected. Start time of QH values must always be in the following order: xx:00, xx:15, xx:30, xx:45."
+                    )
                 start = parse_csv_date_str(record[START_TIME_KEY])
+                if daylight_saving_change_needs_additional_hour:
+                    # double check for daylight saving change, reset the flag anyway
+                    if start == statistics[-1]["start"]:
+                        start += timedelta(hours=1)
+                    daylight_saving_change_needs_additional_hour = False
             if index % 4 == 0:
+                # LINZ NETZ indicates a winter daylight saving change when the start_time of an hour block is equal to the end_time.
+                # Therefore it is necessary to add an additional (UTC) hour to the next hour.
+                if start == parse_csv_date_str(record[END_TIME_KEY]):
+                    daylight_saving_change_needs_additional_hour = True
                 _sum += hourly_sum
                 statistics.append(
                     StatisticData(

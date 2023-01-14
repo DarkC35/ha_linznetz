@@ -10,6 +10,7 @@ PLATFORMS = [SENSOR]
 
 # Services
 SERVICE_IMPORT_REPORT = "import_report"
+END_TIME_KEY = "Datum bis"
 START_TIME_KEY = "Datum von"
 
 # Configuration and options
