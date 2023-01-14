@@ -10,6 +10,7 @@ PLATFORMS = [SENSOR]
 
 # Services
 SERVICE_IMPORT_REPORT = "import_report"
+START_TIME_KEY = "Datum von"
 
 # Configuration and options
 DEFAULT_NAME = "SmartMeter"

@@ -1,5 +1,10 @@
 """Constants for linznetz tests."""
-from custom_components.linznetz.const import CONF_METER_POINT_NUMBER
+from custom_components.linznetz.const import CONF_METER_POINT_NUMBER, CONF_NAME
 
 # Mock config data to be used across multiple tests
 MOCK_CONFIG = {CONF_METER_POINT_NUMBER: "AT0000000000000000000000000000000"}
+MOCK_CONFIG_WITH_CUSTOM_NAME = {
+    CONF_METER_POINT_NUMBER: "AT0000000000000000000000000000000",
+    CONF_NAME: "SmartMeter1",
+}
+MOCK_CONFIG_INVALID_LENGTH = {CONF_METER_POINT_NUMBER: "ATinvalid"}

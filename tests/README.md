@@ -8,6 +8,7 @@ To begin, it is recommended to create a virtual environment to install dependenc
 ```bash
 python3 -m venv venv
 source venv/bin/activate
+pip3 install wheel # my be required for the first time
 ```
 
 You can then install the dependencies that will allow you to run tests:
