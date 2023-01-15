@@ -72,15 +72,14 @@ After the import you can use the `sensor.smartmeter_energy` entity on the energy
 
 ### TODOs
 * Describe `linznetz.import_report` service.
-* Add tests.
+* Add tests (see [#10](https://github.com/DarkC35/ha_linznetz/issues/10)).
 * Add screenshots.
-* Fix import with daylight saving changes (see [#4](https://github.com/DarkC35/ha_linznetz/issues/4)).
 
 ## Example automation for daily inserts
 
 This example uses [emcniece/ha_imap_attachment](https://github.com/emcniece/ha_imap_attachment/) to download the attachments. You can install this component manually or as an HACS custom repository.
 
-0. Optional: Before setting up the daily automation you can bulk import all your available previous QH values. Download them from linznetz.at as a csv file, copy this file to your HA installation and call the `linznetz.import_report` service from the HA developer tools page. This integrations tries to re-calculate and update the statistics when missing values are inserted afterwards but it's safer to insert them chronologically. Beware that there is an [open issue](https://github.com/DarkC35/ha_linznetz/issues/4) for handling imports that contain daylight saving changes therefore if your report contains such days (e.g. 30. October 2022) the import will fail. You can either use the described workaround or skip these specific days and wait until the issue is resolved.
+0. Optional: Before setting up the daily automation you can bulk import all your available previous QH values. Download them from linznetz.at as a csv file, copy this file to your HA installation and call the `linznetz.import_report` service from the HA developer tools page. This integrations tries to re-calculate and update the statistics when missing values are inserted afterwards but it's safer to insert them chronologically.
 1. Install `ha_imap_attachment` and follow the steps to create a new folder for the attachments on your HA installation (we use `/config/attachments` here).
 2. Lookup the IMAP configurations for your mail provider (example below uses Outlook). For Gmail you will have to set an App Password on your Google account and enable Multi-Factor Authentication (see [core IMAP docs](https://www.home-assistant.io/integrations/imap/#gmail-with-app-password)).
 3. Optional: Login to your mail provider and create a new folder for the LINZ NETZ reports, e.g. `VDI`. If you don't want to use a new folder you have to use the folder `INBOX` in your configuration but it will be difficult to filter this way.
