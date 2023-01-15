@@ -75,6 +75,10 @@ After the import you can use the `sensor.smartmeter_energy` entity on the energy
 * Add tests (see [#10](https://github.com/DarkC35/ha_linznetz/issues/10)).
 * Add screenshots.
 
+## Troubleshooting
+
+Although this integration provides some logic to re-calculate the energy value when missing values are added afterwards (and not chronologically) it may happen that the values are corrupted at some point. The easiest way to fix this is to export a new bulk QH report from LINZ NETZ and import this report with the service to update all the values.
+
 ## Example automation for daily inserts
 
 This example uses [emcniece/ha_imap_attachment](https://github.com/emcniece/ha_imap_attachment/) to download the attachments. You can install this component manually or as an HACS custom repository.
@@ -91,6 +95,13 @@ This example uses [emcniece/ha_imap_attachment](https://github.com/emcniece/ha_i
 5. Add the configs from the `configuration.yaml` example below to your configurations.
 6. Restart Home-Assistant. You can test the configuration with forwarding a daily report to yourself. You should see a `sensor.linz_netz_attachments` (based on the sensor name in the configuration) entity with the path to a csv file now (this can take some minutes).
 7. Create an automation like the `automation-example.yaml` below (as a file or with the UI; you can copy-paste this as-is).
+
+### Some known problems
+
+1. It can happen that the `ha_imap_attachment` loses connection to the IMAP server and does not re-connect in time when the daily report arrives. When this happens you can simply forward the e-mail report to yourself again and it should be downloaded and inserted. Beware that the IMAP integration may need some minutes until it detects the e-mail. Another way would be to download and import the report manually.
+2. The same problem can happen if your HA instance is down (e.g. during an update or power outage) at this time. You can use the same fix mentioned above.
+3. Although they claim to send you the report until 12:00 it can be later too. Normally you will get your report at the same time as the day before +/- 5 minutes.
+4. It happens that LINZ NETZ does not send you a report on some days (I don't know why, maybe the SmartMeter does not send the data to them as you cannot see the values online either). Normally you will get two mails on the next day and this automation inserts them without a problem.
 
 ### configuration.yaml
 
