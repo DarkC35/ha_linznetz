@@ -83,6 +83,12 @@ def parse_value_to_decimal(value) -> Decimal:
     return Decimal(str(value))
 
 
+def parse_statistic_value_to_datetime(value) -> datetime:
+    """Parses a statistic value to datetime with provided backwards compatibility."""
+    # parsing "from timestamp" is required since 2023.3.0
+    return value if isinstance(value, datetime) else dt_util.utc_from_timestamp(value)
+
+
 def get_csv_data_list_from_file(file_path: str):
     """Returns content on file as csv list."""
     if not os.path.isfile(file_path):
@@ -184,7 +190,9 @@ class LinzNetzSensor(SensorEntity):
         elif (
             len(last_inserted_stat) == 1
             and len(last_inserted_stat[self.entity_id]) == 1
-            and last_inserted_stat[self.entity_id][0]["start"]
+            and parse_statistic_value_to_datetime(
+                last_inserted_stat[self.entity_id][0]["start"]
+            )
             < parse_csv_date_str(csv_data[0][START_TIME_KEY])
         ):
             _sum = parse_value_to_decimal(last_inserted_stat[self.entity_id][0]["sum"])
@@ -206,7 +214,9 @@ class LinzNetzSensor(SensorEntity):
                 parse_value_to_decimal(inserted_stats[self.entity_id][0]["sum"])
                 if len(inserted_stats) > 0
                 and len(inserted_stats[self.entity_id]) > 0
-                and inserted_stats[self.entity_id][0]["start"]
+                and parse_statistic_value_to_datetime(
+                    inserted_stats[self.entity_id][0]["start"]
+                )
                 < parse_csv_date_str(csv_data[0][START_TIME_KEY])
                 else Decimal(0)
             )
@@ -243,13 +253,17 @@ class LinzNetzSensor(SensorEntity):
                     )
                 )
                 hourly_sum = Decimal(0)
+        last_added_stat = statistics[-1]
         for stat in inserted_stats[self.entity_id]:
-            if stat["start"] <= statistics[-1]["start"]:
+            if (
+                parse_statistic_value_to_datetime(stat["start"])
+                <= last_added_stat["start"]
+            ):
                 continue
             _sum += parse_value_to_decimal(stat["state"])
             statistics.append(
                 StatisticData(
-                    start=stat["start"],
+                    start=parse_statistic_value_to_datetime(stat["start"]),
                     state=stat["state"],
                     sum=_sum,
                 )
