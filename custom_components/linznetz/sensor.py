@@ -21,7 +21,7 @@ from homeassistant.components.sensor import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR
+from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -126,7 +126,7 @@ class LinzNetzSensor(SensorEntity):
         _name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
         self._attr_name = f"{_name} Energy"
 
-        self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+        self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._attr_device_class = SensorDeviceClass.ENERGY
         self._attr_state_class = SensorStateClass.TOTAL
         self._attr_should_poll = False
@@ -150,8 +150,8 @@ class LinzNetzSensor(SensorEntity):
 
         # metadata for external stats
         # metadata = StatisticMetaData(
-        #     unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        #     state_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        #     unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        #     state_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         #     source=DOMAIN,
         #     name=self.name,
         #     statistic_id=self.statistic_id,
@@ -160,8 +160,8 @@ class LinzNetzSensor(SensorEntity):
         # )
         # metadata for internal stats
         metadata = StatisticMetaData(
-            unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            # state_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+            unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            # state_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             source="recorder",
             name=self.name,
             statistic_id=self.entity_id,
